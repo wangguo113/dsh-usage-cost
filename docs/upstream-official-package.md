@@ -54,6 +54,10 @@ A third-party bundle can cover the need today (the reference implementation belo
 5. Is there an official holiday calendar source for peak/off-peak, or is it explicitly out of scope?
 6. Would you accept a PR for such a package, or should this stay a third-party bundle and be listed in a market index?
 
+## Discussion
+
+Posted in the upstream Ideas category: <https://github.com/deepseek-ai/deepseek-harness/discussions/11137>.
+
 ## Chinese summary
 
 第三方 bundle（链接见顶部）已经能展示今日/近 7 天/总计的 tokens、按官方峰谷价估算的费用、当前计费时段和账户余额。但它的实现方式与官方惯例有差距：直接扫描 `sessionPersistence` 而不是用 `sessionProjections` 单元、自建 HTTP 路由而不是生成的 Remote 接口、价格与峰谷规则硬编码在包里（且未建模法定节假日）、跨会话聚合没有官方归属。这里把差距和可选的落地方案列出来，想先和 maintainer 确认产品方向，再决定是提 PR 还是留在第三方生态。
