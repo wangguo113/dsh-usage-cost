@@ -25,6 +25,12 @@ dsh plugin --profile <profile> add dsh-usage-cost
 
 或在 Harness 的插件管理界面里安装。要求 Node.js ≥ 22、DSH `>=0.2.0 <0.3.0`。
 
+npm 包发布前，可以直接从 GitHub 安装（建议锁 commit；这个 bundle 没有构建步骤）：
+
+```sh
+dsh plugin --profile <profile> add github:wangguo113/dsh-usage-cost#<commit>
+```
+
 安装后插件自带一个 `usage` 行，无需额外配置。
 
 ## 数据来源
