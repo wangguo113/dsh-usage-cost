@@ -25,9 +25,13 @@ dsh plugin --profile <profile> add dsh-usage-cost
 
 or install it from the Harness plugin manager. Requires Node.js ≥ 22 and DSH `>=0.2.0 <0.3.0`.
 
-Until the npm package is published, install straight from Git (pin a commit; the bundle has no build step):
+Until the npm package is published, install from a GitHub release tarball or straight from Git:
 
 ```sh
+# release tarball (download the asset, then add it locally)
+dsh plugin --profile <profile> add ./dsh-usage-cost-1.3.0.tgz
+
+# or directly from Git (pin a commit; the bundle has no build step)
 dsh plugin --profile <profile> add github:wangguo113/dsh-usage-cost#<commit>
 ```
 
