@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "API 用量与费用",
+    "description": "在侧栏展示 Harness 的 API token 用量与费用估算（今日 / 近 7 天 / 总计）、当前高峰/低峰计费时段，以及 DeepSeek 账户余额。"
+  }
+}

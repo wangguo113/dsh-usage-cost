@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "API Usage & Cost",
+    "description": "Shows Harness API token usage and estimated cost (today / last 7 days / all time), the current peak or off-peak billing window, and the DeepSeek account balance beside the sidebar footer."
+  }
+}
