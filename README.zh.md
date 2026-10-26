@@ -28,7 +28,10 @@ dsh plugin --profile <profile> add dsh-usage-cost
 npm 包发布前，可以从 GitHub Release 的 tarball 或直接从 Git 安装：
 
 ```sh
-# Release tarball（下载资产后本地安装）
+# Release tarball，直接按 URL 安装
+dsh plugin --profile <profile> add https://github.com/wangguo113/dsh-usage-cost/releases/download/v1.3.0/dsh-usage-cost-1.3.0.tgz
+
+# 或下载资产后本地安装
 dsh plugin --profile <profile> add ./dsh-usage-cost-1.3.0.tgz
 
 # 或直接从 Git 安装（建议锁 commit；这个 bundle 没有构建步骤）

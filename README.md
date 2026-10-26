@@ -28,7 +28,10 @@ or install it from the Harness plugin manager. Requires Node.js ≥ 22 and DSH `
 Until the npm package is published, install from a GitHub release tarball or straight from Git:
 
 ```sh
-# release tarball (download the asset, then add it locally)
+# release tarball, added by URL
+dsh plugin --profile <profile> add https://github.com/wangguo113/dsh-usage-cost/releases/download/v1.3.0/dsh-usage-cost-1.3.0.tgz
+
+# or download the asset first and add it locally
 dsh plugin --profile <profile> add ./dsh-usage-cost-1.3.0.tgz
 
 # or directly from Git (pin a commit; the bundle has no build step)
