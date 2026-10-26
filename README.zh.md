@@ -76,6 +76,10 @@ dsh plugin --profile <profile> add dsh-usage-cost
 - 费用是按官方列表价估算，不是账单金额。
 - 余额需要已登录 DeepSeek 账户；只配 API Key 的部署会显示未登录提示。
 
+## 关于上游化
+
+把这份实现变成官方第一方包的讨论稿在 [docs/upstream-official-package.md](docs/upstream-official-package.md)：包含与官方惯例的差距分析、建议的包拆分和待 maintainer 决策的问题。
+
 ## License
 
 MIT

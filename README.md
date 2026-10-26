@@ -76,6 +76,10 @@ Create `$DSH_HOME/cache/dsh-usage/pricing.json` (`$DSH_HOME` defaults to `~/.dsh
 - Cost is an estimate from list prices, not a bill.
 - The balance needs a signed-in DeepSeek account; API-key-only deployments show the signed-out hint.
 
+## Proposing this upstream
+
+A discussion draft for making this a first-party Harness package (gap analysis against upstream conventions, proposed package split, and open questions) lives in [docs/upstream-official-package.md](docs/upstream-official-package.md).
+
 ## License
 
 MIT
