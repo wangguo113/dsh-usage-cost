@@ -76,6 +76,24 @@ dsh plugin --profile <profile> add dsh-usage-cost
 - 费用是按官方列表价估算，不是账单金额。
 - 余额需要已登录 DeepSeek 账户；只配 API Key 的部署会显示未登录提示。
 
+## 发布
+
+通过 GitHub Actions 携带 provenance 发布到 npm（`.github/workflows/publish.yml`）：
+
+1. 在仓库设置里加 secret `NPM_TOKEN`（npm 的 automation token）。
+2. 改 `package.json` 的 `version` 并提交，然后推 tag：
+
+   ```sh
+   git tag v1.3.0 && git push origin v1.3.0
+   ```
+
+工作流会先跑 `npm test` 再执行 `npm publish --provenance`。也可以在有 npm 登录态的机器上手动发布：
+
+```sh
+git clone https://github.com/wangguo113/dsh-usage-cost.git
+cd dsh-usage-cost && npm publish
+```
+
 ## 关于上游化
 
 把这份实现变成官方第一方包的讨论稿在 [docs/upstream-official-package.md](docs/upstream-official-package.md)：包含与官方惯例的差距分析、建议的包拆分和待 maintainer 决策的问题。

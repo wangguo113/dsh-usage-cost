@@ -76,6 +76,24 @@ Create `$DSH_HOME/cache/dsh-usage/pricing.json` (`$DSH_HOME` defaults to `~/.dsh
 - Cost is an estimate from list prices, not a bill.
 - The balance needs a signed-in DeepSeek account; API-key-only deployments show the signed-out hint.
 
+## Publishing
+
+Releases are published to npm with provenance from GitHub Actions (`.github/workflows/publish.yml`):
+
+1. Add a repository secret `NPM_TOKEN` (an npm automation token for the `dsh-usage-cost` package or an account-level token).
+2. Bump `version` in `package.json`, commit, then push a tag:
+
+   ```sh
+   git tag v1.3.0 && git push origin v1.3.0
+   ```
+
+The workflow runs `npm test` before `npm publish --provenance`. Alternatively, publish manually from an authenticated machine:
+
+```sh
+git clone https://github.com/wangguo113/dsh-usage-cost.git
+cd dsh-usage-cost && npm publish
+```
+
 ## Proposing this upstream
 
 A discussion draft for making this a first-party Harness package (gap analysis against upstream conventions, proposed package split, and open questions) lives in [docs/upstream-official-package.md](docs/upstream-official-package.md).
