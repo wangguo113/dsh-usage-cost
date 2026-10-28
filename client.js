@@ -297,6 +297,9 @@ window.__ModuleLoader__.load({
     }
 
     const CSS = `
+.dsh-au-entry{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.dsh-au-topup{display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 8px;border-radius:999px;border:1px solid transparent;background:color-mix(in srgb, var(--dsw-alias-brand-primary) 16%, transparent);color:var(--dsw-alias-brand-primary);font:inherit;font-size:10.5px;font-weight:600;text-decoration:none;white-space:nowrap;flex:none}
+.dsh-au-topup:hover{background:color-mix(in srgb, var(--dsw-alias-brand-primary) 26%, transparent)}
 .dsh-au-btn{display:inline-flex;align-items:center;gap:8px;padding:3px 8px;min-height:30px;border:none;border-radius:8px;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;text-align:left;cursor:pointer;transition:background .12s ease,color .12s ease}
 .dsh-au-btn:hover{background:color-mix(in srgb, var(--dsw-alias-label-primary) 8%, transparent);color:var(--dsw-alias-label-primary)}
 .dsh-au-btn:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px}
@@ -395,6 +398,7 @@ window.__ModuleLoader__.load({
       const todayCost = data && data.cost ? data.cost.today : undefined
       const balanceText = primaryBalance(data && data.balance)
       const bonusText = bonusBalance(data && data.balance)
+      const topUpUrl = data && data.balance && data.balance.links ? data.balance.links.topUpUrl || '' : ''
       const titleParts = [label]
       if (value) titleParts.push(`${t('today')} ${value}`)
       if (typeof todayCost === 'number') titleParts.push(`≈ ${formatCost(todayCost)}`)
@@ -438,33 +442,50 @@ window.__ModuleLoader__.load({
         null,
         h('style', { key: 'style' }, CSS),
         h(
-          'button',
-          {
-            ref,
-            type: 'button',
-            className: wide ? 'dsh-au-btn' : 'dsh-au-btn dsh-au-btn-rail',
-            title,
-            'aria-label': title,
-            'aria-expanded': state.open ? 'true' : 'false',
-            onClick: () => {
-              if (!store.open) {
-                try {
-                  store.anchor = ref.current ? ref.current.getBoundingClientRect() : null
-                } catch {
-                  store.anchor = null
+          'span',
+          { className: 'dsh-au-entry' },
+          h(
+            'button',
+            {
+              ref,
+              type: 'button',
+              className: wide ? 'dsh-au-btn' : 'dsh-au-btn dsh-au-btn-rail',
+              title,
+              'aria-label': title,
+              'aria-expanded': state.open ? 'true' : 'false',
+              onClick: () => {
+                if (!store.open) {
+                  try {
+                    store.anchor = ref.current ? ref.current.getBoundingClientRect() : null
+                  } catch {
+                    store.anchor = null
+                  }
+                  refresh()
                 }
-                refresh()
-              }
-              store.open = !store.open
-              emit()
+                store.open = !store.open
+                emit()
+              },
             },
-          },
-          h('span', { className: 'dsh-au-btn-icon' }, h(UsageIcon, null)),
-          wide
-            ? body
-            : peak === null
-              ? null
-              : h('span', { className: 'dsh-au-rail-dot', 'data-peak': peak ? 'true' : 'false' }),
+            h('span', { className: 'dsh-au-btn-icon' }, h(UsageIcon, null)),
+            wide
+              ? body
+              : peak === null
+                ? null
+                : h('span', { className: 'dsh-au-rail-dot', 'data-peak': peak ? 'true' : 'false' }),
+          ),
+          wide && topUpUrl
+            ? h(
+                'a',
+                {
+                  className: 'dsh-au-topup',
+                  href: topUpUrl,
+                  target: '_blank',
+                  rel: 'noreferrer',
+                  title: t('topUp'),
+                },
+                t('topUp'),
+              )
+            : null,
         ),
       )
     }
