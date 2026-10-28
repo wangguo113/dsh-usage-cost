@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.1
+
+- Card: added a **Top up** (充值) button next to the balance that opens the platform top-up page, with the usage-center link beside it.
+- Card: the bonus chip only appears when the bonus balance is positive and reads `赠 $x`; the zero-balance placeholder is gone.
+- Client half now declares `locale` as an injected service, so the entry and card follow the UI language even when the plugin mounts before the locale service is ready; the fallback also reads the document language.
+- README: install from the GitHub release tarball (URL or local file).
+
 ## 1.3.0
 
 - Packaging release: unscoped public package name `dsh-usage-cost`, MIT license, `engines.node`/`engines.dsh`, README (English + Chinese), CHANGELOG.

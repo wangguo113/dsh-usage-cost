@@ -34,7 +34,8 @@ window.__ModuleLoader__.load({
         bonus: '赠送额度',
         signedOut: '未登录 DeepSeek 账户',
         signInHint: '在 设置 → 账户 登录后显示余额',
-        openUsage: '打开用量中心',
+        topUp: '充值',
+        usageCenter: '用量中心',
         refresh: '刷新',
         close: '关闭',
         loading: '正在读取用量…',
@@ -73,7 +74,8 @@ window.__ModuleLoader__.load({
         bonus: 'Bonus credit',
         signedOut: 'DeepSeek account not signed in',
         signInHint: 'Sign in under Settings → Account to show the balance',
-        openUsage: 'Open usage center',
+        topUp: 'Top up',
+        usageCenter: 'Usage center',
         refresh: 'Refresh',
         close: 'Close',
         loading: 'Reading usage…',
@@ -137,7 +139,10 @@ window.__ModuleLoader__.load({
         const locale = localeService && localeService.getLocale ? localeService.getLocale() : null
         if (locale && locale.id) return locale.id
       } catch {
-        /* fall through to navigator */
+        /* fall through to the document and browser */
+      }
+      if (typeof document === 'object' && document && document.documentElement && document.documentElement.lang) {
+        return document.documentElement.lang
       }
       const navigatorLocale = typeof navigator === 'object' && navigator && navigator.language ? navigator.language : 'en'
       return /^zh/i.test(navigatorLocale) ? 'zh' : 'en'
@@ -287,9 +292,8 @@ window.__ModuleLoader__.load({
     function bonusBalance(balance) {
       if (!balance || !balance.available) return ''
       const bonus = Array.isArray(balance.bonusWallets) ? balance.bonusWallets : []
-      if (bonus.length === 0) return ''
       const funded = bonus.filter((wallet) => Number(wallet && wallet.balance) > 0)
-      return formatMoney(funded[0] || bonus[0])
+      return funded.length > 0 ? formatMoney(funded[0]) : ''
     }
 
     const CSS = `
@@ -340,6 +344,11 @@ window.__ModuleLoader__.load({
 .dsh-au-wallet-note{color:var(--dsw-alias-label-secondary);font-size:11px}
 .dsh-au-link{color:var(--dsw-alias-brand-primary);text-decoration:none;font-size:11px}
 .dsh-au-link:hover{text-decoration:underline}
+.dsh-au-actions{display:flex;align-items:center;gap:6px;padding-top:2px}
+.dsh-au-action{display:inline-flex;align-items:center;justify-content:center;height:24px;padding:0 10px;border-radius:999px;border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:11px;text-decoration:none;white-space:nowrap}
+.dsh-au-action:hover{background:color-mix(in srgb, var(--dsw-alias-label-primary) 8%, transparent)}
+.dsh-au-action[data-primary='true']{border-color:transparent;background:var(--dsw-alias-brand-primary);color:var(--dsw-alias-bg-base);font-weight:600}
+.dsh-au-action[data-primary='true']:hover{filter:brightness(1.08)}
 .dsh-au-status{color:var(--dsw-alias-label-secondary);font-size:11px;display:flex;align-items:center;gap:6px}
 .dsh-au-status[data-error='true']{color:var(--dsw-alias-state-error-primary)}
 .dsh-au-dot{width:6px;height:6px;border-radius:50%;background:var(--dsw-alias-brand-primary);animation:dsh-au-pulse 1.2s ease-in-out infinite;flex:none}
@@ -410,7 +419,7 @@ window.__ModuleLoader__.load({
                     billingText,
                   ),
               bonusText
-                ? h('span', { className: 'dsh-au-btn-bonus' }, `${t('bonusShort')}${bonusText}`)
+                ? h('span', { className: 'dsh-au-btn-bonus' }, `${t('bonusShort')} ${bonusText}`)
                 : null,
             ),
             h(
@@ -664,6 +673,37 @@ window.__ModuleLoader__.load({
             { className: 'dsh-au-section', key: 'balance' },
             h('div', { className: 'dsh-au-section-title' }, t('balance')),
             ...renderBalance(balance),
+            balance && balance.links && (balance.links.topUpUrl || balance.links.usageUrl)
+              ? h(
+                  'div',
+                  { className: 'dsh-au-actions', key: 'balance-actions' },
+                  balance.links.topUpUrl
+                    ? h(
+                        'a',
+                        {
+                          className: 'dsh-au-action',
+                          'data-primary': 'true',
+                          href: balance.links.topUpUrl,
+                          target: '_blank',
+                          rel: 'noreferrer',
+                        },
+                        t('topUp'),
+                      )
+                    : null,
+                  balance.links.usageUrl
+                    ? h(
+                        'a',
+                        {
+                          className: 'dsh-au-action',
+                          href: balance.links.usageUrl,
+                          target: '_blank',
+                          rel: 'noreferrer',
+                        },
+                        t('usageCenter'),
+                      )
+                    : null,
+                )
+              : null,
           ),
         )
         const rows = [
@@ -736,9 +776,6 @@ window.__ModuleLoader__.load({
               { className: 'dsh-au-foot-note', title: t('costNote') },
               `${t('updated')} ${formatTime(state.fetchedAt)} · ${formatCount(data.sessions)} ${t('sessions')}`,
             ),
-            balance && balance.links && balance.links.usageUrl
-              ? h('a', { className: 'dsh-au-link', href: balance.links.usageUrl, target: '_blank', rel: 'noreferrer' }, t('openUsage'))
-              : null,
           ),
         )
       }
@@ -793,7 +830,7 @@ window.__ModuleLoader__.load({
     }
 
     return {
-      inject: ['slots'],
+      inject: ['slots', 'locale'],
       apply(ctx) {
         localeService = ctx.get('locale') || null
         if (localeService && typeof localeService.register === 'function') {

@@ -14,7 +14,7 @@ A DeepSeek Harness plugin that shows API usage, estimated cost, the live peak/of
   - today / last 7 days / all time, each with tokens and `≈$cost`;
   - the billing badge next to the title and a countdown to the next switch;
   - input / output / cache hit / cache write, plus the top models with tokens, calls, and cost;
-  - account balance and bonus wallets (with an unpriced-model note) and a link to the usage center;
+  - account balance and bonus wallets (with an unpriced-model note), a **Top up** button that opens the platform top-up page, and a usage-center link;
   - first-run scan progress for historical session logs.
 
 ## Install
