@@ -6,7 +6,7 @@ A DeepSeek Harness plugin that shows API usage, estimated cost, the live peak/of
 
 ## UI
 
-- **Sidebar entry** (expanded sidebar) shows two lines:
+- **Sidebar entry** (expanded sidebar) shows two lines; the peak/off-peak badge carries a live countdown to the next billing-window switch:
   - `API usage` + peak/off-peak badge + bonus-credit badge (`Bonus $X`);
   - today's tokens · estimated cost · wallet balance.
 - **Collapsed rail**: icon plus a peak/off-peak dot (green = off-peak, orange = peak).

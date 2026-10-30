@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.2
+
+- Sidebar entry: a live countdown beside the peak/off-peak badge shows how long remains until the next billing-window switch (updates every 15 seconds; the tooltip names the target window and switch time).
+
 ## 1.3.1
 
 - Sidebar entry: a compact **Top up** (充值) pill beside the widget opens the platform top-up page in a new tab.
