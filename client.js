@@ -50,6 +50,8 @@ window.__ModuleLoader__.load({
         billing: '计费时段',
         peakHint: '高峰时段：北京时间 09:00–12:00、14:00–18:00（周一至周五）；其余时段与周末按低峰半价。不含法定节假日。',
         switchIn: '距切换',
+        toPeak: '距转高峰',
+        toOffPeak: '距转低峰',
         costLabel: '费用估算',
         costNote: '费用按 DeepSeek 官方峰谷价估算',
         unpriced: '未计价模型',
@@ -90,6 +92,8 @@ window.__ModuleLoader__.load({
         billing: 'Billing window',
         peakHint: 'Peak: 01:00–04:00 and 06:00–10:00 UTC, Mon–Fri. Everything else, including weekends, bills at half price. Chinese public holidays are not modelled.',
         switchIn: 'switch in',
+        toPeak: 'Until peak',
+        toOffPeak: 'Until off-peak',
         costLabel: 'Cost estimate',
         costNote: 'Estimated from the official DeepSeek peak/off-peak rates',
         unpriced: 'Unpriced models',
@@ -306,6 +310,7 @@ window.__ModuleLoader__.load({
 .dsh-au-btn-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex:none}
 .dsh-au-btn-body{display:flex;flex-direction:column;gap:1px;min-width:0}
 .dsh-au-btn-line1{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;line-height:1.2;color:var(--dsw-alias-label-primary);white-space:nowrap}
+.dsh-au-countdown{font-size:10px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
 .dsh-au-btn-line2{display:flex;align-items:center;gap:5px;font-size:10.5px;line-height:1.2;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
 .dsh-au-btn-cost{color:var(--dsw-alias-label-primary);font-weight:600}
 .dsh-au-btn-balance{color:var(--dsw-alias-label-primary);font-weight:600}
@@ -374,6 +379,7 @@ window.__ModuleLoader__.load({
 
     function UsageButton(props) {
       const state = useStore()
+      const [nowTick, setNowTick] = React.useState(() => Date.now())
       const wide = !props || props.wide !== false
       const ref = React.useRef(null)
       const data = state.data
@@ -386,8 +392,10 @@ window.__ModuleLoader__.load({
         const timer = setInterval(() => {
           if (!store.open && !inFlight) refresh()
         }, POLL_CLOSED_MS)
+        const clock = setInterval(() => setNowTick(Date.now()), 15000)
         return () => {
           clearInterval(timer)
+          clearInterval(clock)
           if (store.buttonEl === ref.current) store.buttonEl = null
         }
       }, [])
@@ -395,6 +403,13 @@ window.__ModuleLoader__.load({
       const label = t('button')
       const peak = data && data.billing ? Boolean(data.billing.peak) : null
       const billingText = peak === null ? '' : peak ? t('peak') : t('offPeak')
+      const billingInfo = data && data.billing ? data.billing : null
+      const remainingMs = billingInfo && billingInfo.nextChangeAt ? billingInfo.nextChangeAt - nowTick : 0
+      const countdown = remainingMs > 0 ? formatDuration(remainingMs) : ''
+      const countdownTitle =
+        countdown && billingInfo
+          ? `${peak ? t('toOffPeak') : t('toPeak')} ${countdown} (${formatTime(billingInfo.nextChangeAt)})`
+          : ''
       const todayCost = data && data.cost ? data.cost.today : undefined
       const balanceText = primaryBalance(data && data.balance)
       const bonusText = bonusBalance(data && data.balance)
@@ -405,6 +420,7 @@ window.__ModuleLoader__.load({
       if (balanceText) titleParts.push(`${t('balance')} ${balanceText}`)
       if (bonusText) titleParts.push(`${t('bonus')} ${bonusText}`)
       if (billingText) titleParts.push(billingText)
+      if (countdownTitle) titleParts.push(countdownTitle)
       const title = titleParts.join(' · ')
 
       const body = wide
@@ -422,6 +438,9 @@ window.__ModuleLoader__.load({
                     { className: 'dsh-au-badge dsh-au-badge-sm', 'data-peak': peak ? 'true' : 'false' },
                     billingText,
                   ),
+              countdown
+                ? h('span', { className: 'dsh-au-countdown', title: countdownTitle }, countdown)
+                : null,
               bonusText
                 ? h('span', { className: 'dsh-au-btn-bonus' }, `${t('bonusShort')} ${bonusText}`)
                 : null,
