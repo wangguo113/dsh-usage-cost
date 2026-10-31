@@ -1,6 +1,6 @@
 {
   "name": "dsh-usage-cost",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "DeepSeek Harness plugin: token usage, estimated cost, the live peak/off-peak billing window, and account balance beside the sidebar footer.",
   "type": "module",
   "license": "MIT",

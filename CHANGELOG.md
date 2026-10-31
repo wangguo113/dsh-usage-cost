@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.0
+
+- Multi-provider usage: every model is counted regardless of who served it, and each model row shows its provider id (`deepseek-official`, `deepseek-account`, `openai-codex`, `ollama`, …).
+- Local models are free by default: `freeProviders` (default `["ollama"]`) and `freeModels` globs (for example `qwen3:*`) are displayed as *Free* at cost 0 instead of being lumped into "unpriced models".
+- Card: the model list shows every tracked model (up to `maxModels`, default 8) in a scrollable list with a provider tag.
+- Cache format v3 stores the provider on each day/model slot; the first pass after upgrading rescans session logs once.
+
 ## 1.3.2
 
 - Sidebar entry: a live countdown beside the peak/off-peak badge shows how long remains until the next billing-window switch (updates every 15 seconds; the tooltip names the target window and switch time).

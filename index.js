@@ -19,12 +19,13 @@ import {
   dayKey,
   emptyUsage,
   foldEvents,
+  isFreeUsage,
   mergePricing,
 } from './core.js'
 
 const ROUTE_PATH = '/api-dsh-usage/snapshot'
-const CACHE_VERSION = 2
-const HOST_REVISION = 3
+const CACHE_VERSION = 3
+const HOST_REVISION = 4
 const READ_BATCH = 6000
 const BALANCE_TTL_MS = 60_000
 const PASS_MIN_INTERVAL_MS = 15_000
@@ -71,6 +72,7 @@ export function apply(ctx, pluginConfig) {
   const readBatch = Number.isFinite(config.readBatch) && config.readBatch > 0 ? Math.floor(config.readBatch) : READ_BATCH
   const passIntervalMs =
     Number.isFinite(config.passIntervalMs) && config.passIntervalMs >= 0 ? Math.floor(config.passIntervalMs) : PASS_MIN_INTERVAL_MS
+  const maxModels = Number.isFinite(config.maxModels) && config.maxModels > 0 ? Math.floor(config.maxModels) : 8
 
   function persistence() {
     return ctx.get('sessionPersistence')
@@ -258,12 +260,13 @@ export function apply(ctx, pluginConfig) {
     const unpriced = new Map()
     let sessionCount = 0
 
-    const accumulate = (scope, model, slot) => {
+    const accumulate = (scope, model, provider, slot) => {
       addCounters(scope.usage, slot.peak)
       addCounters(scope.usage, slot.off)
+      if (isFreeUsage(state.pricing, provider, model)) return
       const cost = costOf(model, slot.peak, slot.off)
       if (cost === undefined) {
-        const entry = unpriced.get(model) || { model, requests: 0, total: 0 }
+        const entry = unpriced.get(model) || { model, provider, requests: 0, total: 0 }
         entry.requests += (slot.peak.requests || 0) + (slot.off.requests || 0)
         entry.total += (slot.peak.total || 0) + (slot.off.total || 0)
         unpriced.set(model, entry)
@@ -276,22 +279,40 @@ export function apply(ctx, pluginConfig) {
       sessionCount += 1
       for (const [day, dayModels] of Object.entries(entry.days)) {
         for (const [model, slot] of Object.entries(dayModels)) {
-          accumulate(scopes.total, model, slot)
-          if (day === today) accumulate(scopes.today, model, slot)
-          if (weekDays.has(day)) accumulate(scopes.last7, model, slot)
-          const row = modelRows.get(model) || { model, usage: emptyUsage(), cost: 0, priced: Boolean(priceFor(model)) }
+          const provider = typeof slot.provider === 'string' ? slot.provider : ''
+          accumulate(scopes.total, model, provider, slot)
+          if (day === today) accumulate(scopes.today, model, provider, slot)
+          if (weekDays.has(day)) accumulate(scopes.last7, model, provider, slot)
+          const row = modelRows.get(model) || {
+            model,
+            provider,
+            usage: emptyUsage(),
+            cost: 0,
+            free: isFreeUsage(state.pricing, provider, model),
+            priced: false,
+          }
+          if (!row.provider && provider) row.provider = provider
+          row.free = row.free || isFreeUsage(state.pricing, row.provider, model)
           addCounters(row.usage, slot.peak)
           addCounters(row.usage, slot.off)
-          if (row.priced) row.cost += costOf(model, slot.peak, slot.off) || 0
+          const cost = row.free ? 0 : costOf(model, slot.peak, slot.off)
+          if (cost !== undefined) row.cost += cost
+          if (cost !== undefined) row.priced = true
           modelRows.set(model, row)
         }
       }
     }
 
     const models = [...modelRows.values()]
-      .map((row) => ({ model: row.model, cost: row.priced ? Number(row.cost.toFixed(6)) : null, ...row.usage }))
+      .map((row) => ({
+        model: row.model,
+        provider: row.provider,
+        free: row.free,
+        cost: row.free ? 0 : row.priced ? Number(row.cost.toFixed(6)) : null,
+        ...row.usage,
+      }))
       .sort((left, right) => right.total - left.total)
-      .slice(0, 8)
+      .slice(0, maxModels)
 
     return {
       ok: true,

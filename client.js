@@ -55,7 +55,8 @@ window.__ModuleLoader__.load({
         costLabel: '费用估算',
         costNote: '费用按 DeepSeek 官方峰谷价估算',
         unpriced: '未计价模型',
-        unpricedHint: '未在 pricing.json 配置价格的模型不计入费用',
+        unpricedHint: '未在 pricing.json 配置价格的模型不计入费用；本地模型（如 ollama）默认按免费计',
+        free: '免费',
         bonusShort: '赠',
       },
       en: {
@@ -97,7 +98,8 @@ window.__ModuleLoader__.load({
         costLabel: 'Cost estimate',
         costNote: 'Estimated from the official DeepSeek peak/off-peak rates',
         unpriced: 'Unpriced models',
-        unpricedHint: 'Models without a price in pricing.json are excluded from cost',
+        unpricedHint: 'Models without a price in pricing.json are excluded from cost; local providers such as ollama are free by default',
+        free: 'Free',
         bonusShort: 'Bonus',
       },
     }
@@ -343,10 +345,13 @@ window.__ModuleLoader__.load({
 .dsh-au-row-value{text-align:right;font-variant-numeric:tabular-nums}
 .dsh-au-section{padding-top:8px;border-top:1px solid var(--dsw-alias-border-l1);display:flex;flex-direction:column;gap:5px}
 .dsh-au-section-title{font-size:11px;font-weight:600;color:var(--dsw-alias-label-secondary);letter-spacing:.02em}
-.dsh-au-model{display:flex;gap:10px;align-items:baseline}
+.dsh-au-models{display:flex;flex-direction:column;gap:5px;max-height:150px;overflow-y:auto}
+.dsh-au-model{display:flex;gap:8px;align-items:baseline}
+.dsh-au-model-provider{flex:none;max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px;border-radius:4px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);font-size:9.5px;line-height:1.5}
 .dsh-au-model-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dsh-au-model-value{font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-secondary);font-size:11px;white-space:nowrap}
 .dsh-au-model-cost{font-variant-numeric:tabular-nums;font-size:11px;min-width:52px;text-align:right}
+.dsh-au-model-cost[data-free='true']{color:var(--dsw-alias-state-success-primary)}
 .dsh-au-wallet{display:flex;align-items:baseline;gap:8px}
 .dsh-au-wallet-value{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
 .dsh-au-wallet-note{color:var(--dsw-alias-label-secondary);font-size:11px}
@@ -772,13 +777,24 @@ window.__ModuleLoader__.load({
               'div',
               { className: 'dsh-au-section', key: 'models' },
               h('div', { className: 'dsh-au-section-title' }, t('models')),
-              ...models.slice(0, 4).map((row) =>
+              h(
+                'div',
+                { className: 'dsh-au-models' },
+                ...models.map((row) =>
                 h(
                   'div',
                   { className: 'dsh-au-model', key: row.model },
-                  h('span', { className: 'dsh-au-model-name', title: row.model }, row.model),
+                  row.provider
+                    ? h('span', { className: 'dsh-au-model-provider', title: row.provider }, row.provider)
+                    : null,
+                  h('span', { className: 'dsh-au-model-name', title: `${row.provider ? row.provider + ' / ' : ''}${row.model}` }, row.model),
                   h('span', { className: 'dsh-au-model-value' }, `${formatTokens(row.total)} · ${formatCount(row.requests)}`),
-                  h('span', { className: 'dsh-au-model-cost' }, row.cost === null ? '—' : formatCost(row.cost)),
+                  h(
+                    'span',
+                    { className: 'dsh-au-model-cost', 'data-free': row.free ? 'true' : 'false' },
+                    row.free ? t('free') : row.cost === null ? '—' : formatCost(row.cost),
+                  ),
+                  ),
                 ),
               ),
             ),

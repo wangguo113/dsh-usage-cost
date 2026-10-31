@@ -21,6 +21,10 @@ export const PEAK_WINDOWS_UTC = [
 export const DEFAULT_PRICING = {
   currency: 'USD',
   unitTokens: 1_000_000,
+  // Providers that run locally (or are otherwise free): their models cost 0.
+  freeProviders: ['ollama'],
+  // Extra free model ids or globs (`qwen3:*`).
+  freeModels: [],
   models: {
     'deepseek-flash': {
       input: { peak: 0.3, offPeak: 0.15 },
@@ -130,6 +134,7 @@ export function foldEvent(entry, event) {
         : 'unknown'
   const dayModels = entry.days[day] || (entry.days[day] = {})
   const slot = dayModels[model] || (dayModels[model] = { peak: emptyUsage(), off: emptyUsage() })
+  if (typeof source.provider === 'string' && source.provider) slot.provider = source.provider
   addUsage(isPeak(time) ? slot.peak : slot.off, usage)
   return true
 }
@@ -170,6 +175,10 @@ export function mergePricing(raw, base) {
   const merged = {
     currency: typeof raw.currency === 'string' ? raw.currency : base.currency,
     unitTokens: typeof raw.unitTokens === 'number' ? raw.unitTokens : base.unitTokens,
+    freeProviders: Array.isArray(raw.freeProviders)
+      ? raw.freeProviders.filter((value) => typeof value === 'string')
+      : [...(base.freeProviders || [])],
+    freeModels: Array.isArray(raw.freeModels) ? raw.freeModels.filter((value) => typeof value === 'string') : [...(base.freeModels || [])],
     models: { ...base.models },
   }
   for (const [model, price] of Object.entries(raw.models || {})) {
@@ -181,6 +190,22 @@ export function mergePricing(raw, base) {
     merged.models[model] = { input, cacheHit, output }
   }
   return merged
+}
+
+/** Whether a provider/model pair is treated as free (local models and explicit globs). */
+export function isFreeUsage(pricing, provider, model) {
+  const providers = pricing && Array.isArray(pricing.freeProviders) ? pricing.freeProviders : []
+  if (typeof provider === 'string' && provider && providers.includes(provider)) return true
+  const models = pricing && Array.isArray(pricing.freeModels) ? pricing.freeModels : []
+  for (const entry of models) {
+    if (typeof entry !== 'string' || !entry) continue
+    if (entry.endsWith('*')) {
+      if (typeof model === 'string' && model.startsWith(entry.slice(0, -1))) return true
+    } else if (entry === model) {
+      return true
+    }
+  }
+  return false
 }
 
 /**

@@ -8,6 +8,7 @@ import {
   dayKey,
   emptyUsage,
   foldEvents,
+  isFreeUsage,
   isPeak,
   mergePricing,
 } from '../core.js'
@@ -58,6 +59,14 @@ test('addUsage counts requests and falls back to input plus output', () => {
   assert.deepEqual(bucket, { requests: 2, input: 12, output: 8, cacheRead: 7, cacheWrite: 1, reasoning: 0, total: 20 })
 })
 
+test('foldEvent records the provider on the day/model slot', () => {
+  const entry = { days: {} }
+  foldEvents(entry, [{ seq: 0, type: 'assistant/message', time: Date.UTC(2026, 9, 26, 5, 0), data: { message: { source: { provider: 'ollama', model: 'qwen3:8b' } }, usage: { inputTokens: 10 } } }], 0)
+  const day = entry.days[dayKey(Date.UTC(2026, 9, 26, 5, 0))]
+  assert.equal(day['qwen3:8b'].provider, 'ollama')
+  assert.equal(day['qwen3:8b'].off.requests, 1)
+})
+
 test('foldEvents splits peak and off-peak counters and skips inherited events', () => {
   const entry = { days: {} }
   const events = [
@@ -73,6 +82,13 @@ test('foldEvents splits peak and off-peak counters and skips inherited events', 
   assert.equal(day['deepseek-v4-pro'].off.requests, 1)
   assert.equal(day['deepseek-v4-pro'].peak.requests, 0)
   assert.equal(day['deepseek-flash'].peak.total, 100)
+})
+
+test('isFreeUsage treats local providers and globs as free', () => {
+  assert.equal(isFreeUsage(DEFAULT_PRICING, 'ollama', 'qwen3:8b-nothink-16k'), true)
+  assert.equal(isFreeUsage(DEFAULT_PRICING, 'deepseek-official', 'deepseek-v4-pro'), false)
+  assert.equal(isFreeUsage({ ...DEFAULT_PRICING, freeModels: ['qwen3:*'] }, 'openai-codex', 'qwen3:14b'), true)
+  assert.equal(isFreeUsage({ ...DEFAULT_PRICING, freeModels: ['gpt-5.5'] }, 'openai-codex', 'gpt-5.6-luna'), false)
 })
 
 test('mergePricing accepts a number shorthand and keeps unspecified models', () => {
@@ -94,6 +110,8 @@ test('mergePricing accepts a number shorthand and keeps unspecified models', () 
   })
   assert.equal(merged.models.broken, undefined)
   assert.deepEqual(merged.models['deepseek-v4-pro'], DEFAULT_PRICING.models['deepseek-v4-pro'])
+  assert.deepEqual(merged.freeProviders, DEFAULT_PRICING.freeProviders)
+  assert.deepEqual(merged.freeModels, DEFAULT_PRICING.freeModels)
 })
 
 test('costOfSlot prices peak and off-peak counters separately', () => {

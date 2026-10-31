@@ -108,6 +108,13 @@ const events = [
     time: Date.UTC(2026, 9, 26, 5, 0),
     data: { message: { source: { model: 'deepseek-v4-pro' } }, usage: { inputTokens: 1_000_000, totalTokens: 1_000_000 } },
   },
+  // Local Ollama usage: counted as tokens but free, and reported with its provider.
+  {
+    seq: 3,
+    type: 'assistant/message',
+    time: Date.UTC(2026, 9, 26, 5, 30),
+    data: { message: { source: { provider: 'ollama', model: 'qwen3:8b-nothink-16k' } }, usage: { inputTokens: 400, totalTokens: 400 } },
+  },
 ]
 
 test('serves folded usage, cost, and billing window over the snapshot route', async () => {
@@ -116,19 +123,23 @@ test('serves folded usage, cost, and billing window over the snapshot route', as
 
   assert.equal(payload.ok, true)
   assert.equal(payload.sessions, 1)
-  assert.equal(payload.buckets.total.requests, 2)
-  assert.equal(payload.buckets.total.total, 3_000_000)
+  assert.equal(payload.buckets.total.requests, 3)
+  assert.equal(payload.buckets.total.total, 3_000_400)
   // flash peak 1M input + 1M output = 1.5, pro off-peak 1M input = 0.66
   assert.ok(Math.abs(payload.cost.total - 2.16) < 1e-9, `cost.total=${payload.cost.total}`)
   assert.equal(payload.billing.peak, false)
   assert.equal(typeof payload.billing.nextChangeAt, 'number')
   assert.ok(payload.models.some((row) => row.model === 'deepseek-v4-pro' && row.cost === 0.66))
+  const ollama = payload.models.find((row) => row.model === 'qwen3:8b-nothink-16k')
+  assert.equal(ollama.provider, 'ollama')
+  assert.equal(ollama.free, true)
+  assert.equal(ollama.cost, 0)
 
   const cacheFile = join(home, 'cache', 'dsh-usage', 'usage-cache.json')
   assert.equal(existsSync(cacheFile), true)
   const cache = JSON.parse(readFileSync(cacheFile, 'utf8'))
-  assert.equal(cache.version, 2)
-  assert.equal(cache.sessions['session-test'].count, 3)
+  assert.equal(cache.version, 3)
+  assert.equal(cache.sessions['session-test'].count, 4)
 })
 
 test('rejects requests refused by the connection service', async () => {
