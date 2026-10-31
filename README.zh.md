@@ -44,7 +44,7 @@ dsh plugin --profile <profile> add github:wangguo113/dsh-usage-cost#<commit>
 
 - **token 用量**：Host 侧读取 `sessionPersistence`，把每个会话 `assistant/message` 事件里 provider 上报的 `usage` 折叠成「本地日期 × 模型 × 峰/谷」计数；按 `inheritedEventCount` 跳过 fork/seed 继承来的事件，避免重复计数。
 - **多模型 / 多供应商**：所有模型都会统计并显示 provider（`deepseek-official`、`deepseek-account`、`openai-codex`、`ollama` 等）。`freeProviders`（默认 `["ollama"]`）里的本地供应商和 `freeModels` 匹配的模型按**免费**计（显示「免费」）；没有价格的模型归入「未计价模型」，不计入费用。
-- **费用**：同一份计数按模型价格分别乘峰价 / 谷价。默认价格是 DeepSeek 官方列表价（USD / 百万 tokens）：`deepseek-flash`（含 `deepseek-v4-flash`、`deepseek-v4-flash-vision-exp` 旧名）与 `deepseek-v4-pro`。
+- **费用**：同一份计数按模型价格分别乘峰价 / 谷价。内置价格表（`pricing-catalog.js`）包含 DeepSeek 官方峰谷价，以及 16 家供应商约 90 个模型的美元列表价（OpenAI、Anthropic、Google、Moonshot/Kimi、Z.ai、xAI、阿里、MiniMax、腾讯、小米、Upstage、Meta、美团、NVIDIA、Mistral、OpenCode Go），通过 `providerAliases` 匹配（如 `openai-codex → openai`、`zai-coding-cn → z-ai`）。
 - **峰谷规则**：官方高峰时段为 UTC 01:00–04:00、06:00–10:00（周一至周五），折算北京时间 09:00–12:00、14:00–18:00；其余时段与周末半价。中国法定节假日未纳入判定。
 - **余额**：`deepseekAccount` 的账户状态与钱包余额；未登录时卡片显示提示。
 - **增量与缓存**：每个会话记录已折叠的事件数，缓存写到 `$DSH_HOME/cache/dsh-usage/usage-cache.json`；之后每次只读新增的尾部事件。
@@ -69,6 +69,7 @@ dsh plugin --profile <profile> add github:wangguo113/dsh-usage-cost#<commit>
 
 - 每个价格项可写成数字（峰谷同价）或 `{ "peak": n, "offPeak": n }`；
 - `freeProviders`（默认 `["ollama"]`）和 `freeModels`（支持 `qwen3:*` 这种前缀通配）用来把模型标成免费而不是未计价；
+- `providerAliases` 把 DSH 的 provider id 映射到价格表里的供应商（网关不同价格不同时有用）；
 - 只写想覆盖的模型，其余沿用内置官方价；
 - 改完刷新页面即可生效，不需要重扫日志。
 

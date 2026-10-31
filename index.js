@@ -21,6 +21,7 @@ import {
   foldEvents,
   isFreeUsage,
   mergePricing,
+  resolvePrice,
 } from './core.js'
 
 const ROUTE_PATH = '/api-dsh-usage/snapshot'
@@ -88,12 +89,12 @@ export function apply(ctx, pluginConfig) {
     }
   }
 
-  function priceFor(model) {
-    return state.pricing.models[model]
+  function priceFor(model, provider) {
+    return resolvePrice(state.pricing, model, provider)
   }
 
-  function costOf(model, peak, off) {
-    const price = priceFor(model)
+  function costOf(model, provider, peak, off) {
+    const price = priceFor(model, provider)
     if (!price) return undefined
     return costOfSlot(peak, off, price, state.pricing.unitTokens || 1_000_000)
   }
@@ -264,7 +265,7 @@ export function apply(ctx, pluginConfig) {
       addCounters(scope.usage, slot.peak)
       addCounters(scope.usage, slot.off)
       if (isFreeUsage(state.pricing, provider, model)) return
-      const cost = costOf(model, slot.peak, slot.off)
+      const cost = costOf(model, provider, slot.peak, slot.off)
       if (cost === undefined) {
         const entry = unpriced.get(model) || { model, provider, requests: 0, total: 0 }
         entry.requests += (slot.peak.requests || 0) + (slot.off.requests || 0)
@@ -289,13 +290,13 @@ export function apply(ctx, pluginConfig) {
             usage: emptyUsage(),
             cost: 0,
             free: isFreeUsage(state.pricing, provider, model),
-            priced: false,
+            priced: Boolean(resolvePrice(state.pricing, model, provider)),
           }
           if (!row.provider && provider) row.provider = provider
           row.free = row.free || isFreeUsage(state.pricing, row.provider, model)
           addCounters(row.usage, slot.peak)
           addCounters(row.usage, slot.off)
-          const cost = row.free ? 0 : costOf(model, slot.peak, slot.off)
+          const cost = row.free ? 0 : costOf(model, row.provider || provider, slot.peak, slot.off)
           if (cost !== undefined) row.cost += cost
           if (cost !== undefined) row.priced = true
           modelRows.set(model, row)

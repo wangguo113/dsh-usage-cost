@@ -1,6 +1,6 @@
 {
   "name": "dsh-usage-cost",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "DeepSeek Harness plugin: token usage, estimated cost, the live peak/off-peak billing window, and account balance beside the sidebar footer.",
   "type": "module",
   "license": "MIT",
@@ -33,6 +33,7 @@
   "files": [
     "index.js",
     "core.js",
+    "pricing-catalog.js",
     "client.js",
     "cordis.patch.yml",
     "locale/*.json",

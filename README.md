@@ -44,7 +44,7 @@ The bundle inserts its own `usage` row; no extra configuration is required.
 
 - **Tokens**: the Host reads `sessionPersistence` and folds the provider-reported `usage` of every `assistant/message` event into per-local-day, per-model, peak/off-peak counters. Events below `inheritedEventCount` are skipped so forked/seed prefixes are not counted twice.
 - **Providers**: every model is counted, whatever provider served it, and each row shows its provider id (`deepseek-official`, `deepseek-account`, `openai-codex`, `ollama`, …). Local providers listed in `freeProviders` (default `["ollama"]`) and models matching `freeModels` cost 0 and are shown as *Free*; models without a price stay in the "unpriced" note and are excluded from cost.
-- **Cost**: the same counters are priced per model with the peak or off-peak list price. Defaults are DeepSeek's official USD prices per 1M tokens for `deepseek-flash` (including the legacy `deepseek-v4-flash` and `deepseek-v4-flash-vision-exp` names) and `deepseek-v4-pro`.
+- **Cost**: the same counters are priced per model with the peak or off-peak list price. The built-in catalog (`pricing-catalog.js`) lists DeepSeek's official peak/off-peak prices plus flat USD list prices for about 90 models across 16 providers (OpenAI, Anthropic, Google, Moonshot/Kimi, Z.ai, xAI, Alibaba, MiniMax, Tencent, xiaomi, Upstage, Meta, Meituan, NVIDIA, Mistral, OpenCode Go), matched through `providerAliases` such as `openai-codex → openai` or `zai-coding-cn → z-ai`.
 - **Billing windows**: official peak hours are 01:00–04:00 and 06:00–10:00 UTC, Monday to Friday; everything else, including weekends, bills at half price. Chinese public holidays are not modelled.
 - **Balance**: account state and wallets from `deepseekAccount`; signed-out deployments show a hint instead.
 - **Incremental cache**: every session remembers how many persisted events were folded, so a warm cache only reads each log's new tail. The cache lives at `$DSH_HOME/cache/dsh-usage/usage-cache.json`.
@@ -69,6 +69,7 @@ Create `$DSH_HOME/cache/dsh-usage/pricing.json` (`$DSH_HOME` defaults to `~/.dsh
 
 - A price side may be a plain number (same rate peak and off-peak) or `{ "peak": n, "offPeak": n }`.
 - `freeProviders` (default `["ollama"]`) and `freeModels` (globs such as `qwen3:*`) mark usage as free instead of unpriced.
+- `providerAliases` maps a DSH provider id to a catalog provider id when the list price depends on the gateway.
 - List only the models you want to override; everything else keeps the built-in list price.
 - Refresh the page after editing; logs are not rescanned.
 

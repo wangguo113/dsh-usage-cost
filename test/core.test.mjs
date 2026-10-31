@@ -11,6 +11,7 @@ import {
   isFreeUsage,
   isPeak,
   mergePricing,
+  resolvePrice,
 } from '../core.js'
 
 test('dayKey uses the local calendar day', () => {
@@ -82,6 +83,19 @@ test('foldEvents splits peak and off-peak counters and skips inherited events', 
   assert.equal(day['deepseek-v4-pro'].off.requests, 1)
   assert.equal(day['deepseek-v4-pro'].peak.requests, 0)
   assert.equal(day['deepseek-flash'].peak.total, 100)
+})
+
+test('resolvePrice matches provider-qualified catalog entries through aliases', () => {
+  // openai-codex is aliased to the catalog's openai provider.
+  assert.equal(resolvePrice(DEFAULT_PRICING, 'gpt-5.5', 'openai-codex').output.peak, 30)
+  assert.equal(resolvePrice(DEFAULT_PRICING, 'gpt-5.6-luna', 'openai-codex').input.peak, 0.2)
+  // Kimi models are listed under the moonshot provider and by model name.
+  assert.equal(resolvePrice(DEFAULT_PRICING, 'kimi-k3', 'moonshot').input.peak, 3)
+  assert.equal(resolvePrice(DEFAULT_PRICING, 'kimi-k3', '').output.peak, 15)
+  // DeepSeek keeps the official peak/off-peak prices.
+  assert.equal(resolvePrice(DEFAULT_PRICING, 'deepseek-v4-pro', 'deepseek-official').input.peak, 1.32)
+  assert.equal(resolvePrice(DEFAULT_PRICING, 'deepseek-v4-pro', 'deepseek-official').input.offPeak, 0.66)
+  assert.equal(resolvePrice(DEFAULT_PRICING, 'unknown-model', 'nobody'), undefined)
 })
 
 test('isFreeUsage treats local providers and globs as free', () => {

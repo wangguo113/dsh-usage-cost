@@ -7,6 +7,8 @@
  * prices in force.
  */
 
+import { MODEL_PRICES, PROVIDER_PRICES } from './pricing-catalog.js'
+
 /** DeepSeek peak hours in UTC, Monday through Friday. */
 export const PEAK_WINDOWS_UTC = [
   [1, 4],
@@ -25,7 +27,16 @@ export const DEFAULT_PRICING = {
   freeProviders: ['ollama'],
   // Extra free model ids or globs (`qwen3:*`).
   freeModels: [],
+  // DSH provider ids -> catalog provider ids, for list prices that differ per gateway.
+  providerAliases: {
+    'deepseek-official': 'deepseek',
+    'deepseek-account': 'deepseek',
+    'openai-codex': 'openai',
+    'zai-coding-cn': 'z-ai',
+  },
   models: {
+    ...MODEL_PRICES,
+    ...PROVIDER_PRICES,
     'deepseek-flash': {
       input: { peak: 0.3, offPeak: 0.15 },
       cacheHit: { peak: 0.006, offPeak: 0.003 },
@@ -175,6 +186,10 @@ export function mergePricing(raw, base) {
   const merged = {
     currency: typeof raw.currency === 'string' ? raw.currency : base.currency,
     unitTokens: typeof raw.unitTokens === 'number' ? raw.unitTokens : base.unitTokens,
+    providerAliases: {
+      ...(base.providerAliases || {}),
+      ...(raw.providerAliases && typeof raw.providerAliases === 'object' ? raw.providerAliases : {}),
+    },
     freeProviders: Array.isArray(raw.freeProviders)
       ? raw.freeProviders.filter((value) => typeof value === 'string')
       : [...(base.freeProviders || [])],
@@ -190,6 +205,24 @@ export function mergePricing(raw, base) {
     merged.models[model] = { input, cacheHit, output }
   }
   return merged
+}
+
+/**
+ * Resolve the list price for one provider/model pair: an exact `provider:model`
+ * entry wins, then the provider's catalog alias, then a model-only entry.
+ */
+export function resolvePrice(pricing, model, provider) {
+  const models = pricing && pricing.models ? pricing.models : {}
+  if (typeof provider === 'string' && provider) {
+    const direct = models[`${provider}:${model}`]
+    if (direct) return direct
+    const alias = pricing && pricing.providerAliases ? pricing.providerAliases[provider] : undefined
+    if (alias) {
+      const aliased = models[`${alias}:${model}`]
+      if (aliased) return aliased
+    }
+  }
+  return models[model]
 }
 
 /** Whether a provider/model pair is treated as free (local models and explicit globs). */
